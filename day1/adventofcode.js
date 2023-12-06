@@ -1,23 +1,41 @@
 const fs = require("node:fs");
+const assert = require("assert");
+
+const numbers = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+};
+// lookahead to allow overlapping text
+const numbersReg = "(?=(" + [...Object.keys(numbers), "[1-9]"].join("|") + "))";
+
+const toNumber = (str) => {
+  if (str.length > 1) {
+    return numbers[str];
+  }
+  return parseInt(str);
+};
 
 const main = (line) => {
-  if (line.length === 0) {
-    return 0;
-  }
-
-  const re = /[0-9]/g;
+  const re = new RegExp(numbersReg, "g");
   const result = [...line.matchAll(re)];
 
-  const first = result[0][0];
+  const first = toNumber(result[0][1]);
 
   // one number
   if (result.length === 1) {
-    return parseInt(first + first); // js ;)
+    return parseInt(`${first}${first}`);
   }
 
   // 2+ numbers
-  const last = result[result.length - 1][0];
-  return parseInt(first + last);
+  const last = toNumber(result[result.length - 1][1]);
+  return parseInt(`${first}${last}`);
 };
 
 fs.readFile(__dirname + "/9sixsevenz3.txt", "utf8", (err, data) => {
@@ -28,13 +46,9 @@ fs.readFile(__dirname + "/9sixsevenz3.txt", "utf8", (err, data) => {
 
   const result = data
     .split("\n")
+    .filter((e) => !!e)
     .map(main)
     .reduce((acc, curr) => acc + curr, 0);
 
   console.log(result);
 });
-
-// console.log(main('1abc2')==='12')
-// console.log(main('pqr3stu8vwx')==='38')
-// console.log(main('a1b2c3d4e5f')==='15')
-// console.log(main('treb7uchet')==='77')
