@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 
 const handToMap = (hand) => {
-  return hand.split("").reduce((acc, letter) => {
+  const map = hand.split("").reduce((acc, letter) => {
     if (acc[letter]) {
       acc[letter] += 1;
       return acc;
@@ -9,17 +9,33 @@ const handToMap = (hand) => {
     acc[letter] = 1;
     return acc;
   }, {});
-};
 
-function isNumber(val) {
-  return typeof val === "number";
-}
+  // transforms J to most used letter
+  if (map["J"] > 0 && map["J"] < 5) {
+    // get most used letter
+    const [letter] = Object.entries(map).reduce(
+      (l, [letter, nb]) => {
+        if (letter !== "J" && nb > l[1]) {
+          return [letter, nb];
+        }
+        return l;
+      },
+      [0, 0]
+    );
+
+    // increase most used letter
+    map[letter] += map["J"];
+    delete map["J"];
+  }
+
+  return map;
+};
 
 const valueToForce = {
   A: 14,
   K: 13,
   Q: 12,
-  J: 11,
+  J: 1, // part 2
   T: 10,
   9: 9,
   8: 8,
@@ -88,23 +104,24 @@ const main = (filename) => {
 
     const handToType = Array.from({ length: 7 }, () => []);
 
+    // sort line to hand type
     content.map((line) => {
       const [hand, bid] = line.split(" ");
       const map = handToMap(hand);
-
       handToType[getTypeForHand(map)].push([hand, parseInt(bid)]);
     });
 
-
     // sort per type
     handToType.forEach((type) => {
-      type.sort(([a],[b])=>sortWeakToStrong(a,b));
+      type.sort(([a], [b]) => sortWeakToStrong(a, b));
     });
 
-    console.log(handToType.flat().reduce((acc,[_,bid],idx)=>{
-      return acc+bid*(idx+1)
-    }, 0));
-
+    // compute total winnings
+    console.log(
+      handToType.flat().reduce((acc, [_, bid], idx) => {
+        return acc + bid * (idx + 1);
+      }, 0)
+    );
   });
 };
 
